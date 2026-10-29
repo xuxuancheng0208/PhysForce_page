@@ -1,0 +1,2722 @@
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="description" content="PhysForce: Physics-aware Force Control for Interactive Video World Model">
+    <meta name="author" content="Xuancheng Xu, Xiaofeng Wang, Yue Ma, Zheng Zhu, Bing-Kun Bao">
+    <meta name="keywords" content="Video generation, Diffusion model, Embodied AI, Robotic manipulation, Physics alignment">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0d12">
+    <meta property="og:image" content="">
+    <title>PhysForce: Physics-aware Force Control for Interactive Video World Model</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/index.css">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-stretch: 100%;
+            font-display: block;
+            font-weight: 300 700;
+            src: url('./assets/roboto.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        @font-face {
+            font-family: 'DancingScript';
+            src: url('./assets/DancingScript-Bold.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Caveat';
+            src: url('./assets/Caveat-Medium.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Alegreya';
+            src: url('./assets/Alegreya-Regular.ttf') format('truetype');
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .abstract-section {
+            padding: 40px 5% 20px 5%;
+            margin-top: 40px;
+        }
+
+        .abstract-section+#teaser-section {
+            margin-top: 10px !important;
+        }
+
+        video {
+            background-color: #000000;
+            aspect-ratio: 16 / 9;
+        }
+
+        body {
+            background-color: #06070a;
+            color: #ffffff;
+            font-family: "Roboto", sans-serif;
+            padding: 0;
+            margin: 0;
+        }
+
+        #intro {
+            padding: 40px 0 20px 0;
+            justify-content: center;
+            text-align: center;
+            background: transparent;
+            color: #ffffff;
+            position: relative;
+            height: auto;
+            width: 100%;
+        }
+
+        #intro h2 {
+            margin: 20px 0 40px 0;
+            font-weight: 300;
+            color: #ffffff
+        }
+
+        .authors {
+            font-size: 16px;
+            font-weight: 500;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 16px;
+            width: 100%;
+            line-height: 1.8;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-demo {
+            width: min(1120px, 100%);
+            margin: 0 auto 34px;
+            padding: 1px;
+            border-radius: 22px;
+            background: linear-gradient(125deg, rgba(101, 190, 255, 0.85), rgba(123, 95, 255, 0.42), rgba(255, 205, 92, 0.76));
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5), 0 0 38px rgba(77, 153, 255, 0.14);
+            overflow: hidden;
+        }
+
+        .hero-demo-title {
+            width: fit-content;
+            margin: 0 auto 18px;
+            font-family: 'Space Grotesk', 'Roboto', sans-serif;
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            color: transparent;
+            background: linear-gradient(100deg, #ff6b6b 0%, #ffffff 46%, #71a7ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 0 14px rgba(104, 160, 255, 0.26));
+        }
+
+        .hero-demo video {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 21px;
+            background: #000;
+        }
+
+        .author-block {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 20px;
+        }
+
+        .author-block a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .author-block a:hover {
+            color: #6692f1;
+        }
+
+        .author-affiliation {
+            font-size: 16px;
+            color: #cfd6e4;
+            text-align: center;
+            margin: 0 auto 10px;
+            width: 100%;
+            max-width: 1100px;
+            line-height: 1.8;
+        }
+
+        .affiliation-block {
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .author-note {
+            margin: 0 0 32px;
+            color: #aab2c0;
+            font-size: 14px;
+        }
+
+        section {
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .content {
+            padding: 0 10%;
+        }
+
+        .button {
+            background-color: #ccc;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: background-color 0.5s;
+            text-decoration: none;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .button:hover {
+            background-color: #fff;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            color: rgb(255, 255, 255);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25em;
+            font-size: clamp(2.5rem, 8vw, 4.2rem);
+            line-height: 1.15;
+        }
+
+        .brand-logo {
+            width: 1.35em;
+            height: 1.35em;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .title-art2 {
+            font-family: 'Space Grotesk', 'Roboto', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.055em;
+            background: linear-gradient(90deg, #dc2626, #ffffff, #6692f1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .title-art3 {
+            font-family: 'Alegreya', sans-serif;
+        }
+
+        .subtitle-line {
+            font-size: 1.7rem;
+            font-weight: 400;
+            color: #cfd6e4;
+            margin: 4px 0 26px 0;
+        }
+
+        #video-wrapper {
+            border-radius: 50px;
+            max-width: 720px;
+            padding-bottom: 40%;
+            margin: 0 auto;
+            background: #000000;
+        }
+
+        .ethics-section,
+        .acknowledgements-section {
+            padding: 80px 10%;
+            text-align: center;
+            margin: 60px auto 0 auto;
+            color: #ccc;
+            max-width: 1500px;
+        }
+
+        /* ===== global background video ===== */
+        #background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.45;
+            filter: brightness(0.5);
+        }
+
+        /* ===================== NEW: section helpers ===================== */
+        .section-head {
+            position: relative;
+            width: fit-content;
+            margin: 0 auto 28px;
+            text-align: center;
+            font-family: 'Space Grotesk', 'Roboto', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.035em;
+            color: transparent;
+            background: linear-gradient(100deg, #ff6b6b 0%, #ffffff 46%, #71a7ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 0 16px rgba(104, 160, 255, 0.28));
+        }
+
+        .section-head::after {
+            content: '';
+            display: block;
+            width: 86px;
+            height: 3px;
+            margin: 11px auto 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #ff5d68, #f7f9ff 50%, #5f9cff);
+            box-shadow: 0 0 14px rgba(103, 157, 255, 0.55);
+        }
+
+        .section-sub {
+            text-align: left;
+            color: #aab2c0;
+            max-width: 1000px;
+            margin: 0 0 28px 0;
+            line-height: 1.6;
+        }
+
+        .placeholder-note {
+            color: #ffcf66;
+            font-size: 0.95rem;
+        }
+
+        /* ===================== NEW: highlight cards ===================== */
+        .highlight-row {
+            display: flex;
+            gap: 22px;
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 0 20px;
+        }
+
+        .highlight-card {
+            flex: 1 1 280px;
+            max-width: 360px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
+            backdrop-filter: blur(6px);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .highlight-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+        }
+
+        .highlight-card i {
+            font-size: 2rem;
+            color: #6692f1;
+            margin-bottom: 12px;
+        }
+
+        .highlight-card h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .highlight-card p {
+            color: #b6bdca;
+            font-size: 0.98rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        /* ===================== NEW: method two-column ===================== */
+        .method-cols {
+            display: flex;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 30px auto 0 auto;
+            flex-wrap: wrap;
+            padding: 0 20px;
+        }
+
+        .method-col {
+            flex: 1 1 380px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            padding: 26px 28px;
+        }
+
+        .method-col h4 {
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .method-col h4 i {
+            color: #6692f1;
+            margin-right: 8px;
+        }
+
+        .method-col p {
+            color: #b6bdca;
+            line-height: 1.65;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .method-cols.three .method-col {
+            flex: 1 1 280px;
+        }
+
+        .paper-figure {
+            width: 100%;
+            margin: 28px auto 0;
+            padding: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        .paper-figure img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 9px;
+        }
+
+        .figure-caption {
+            margin: 14px auto 0;
+            color: #8f9ab0;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            text-align: center;
+        }
+
+        .intro-problems {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 26px;
+        }
+
+        .intro-problem {
+            padding: 20px 20px 22px;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .intro-problem .panel-tag {
+            display: inline-grid;
+            place-items: center;
+            width: 28px;
+            height: 28px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            color: #080a0f;
+            background: #ffd36a;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .intro-problem h4 {
+            margin: 0 0 8px;
+            color: #fff;
+            font-size: 1.05rem;
+        }
+
+        .intro-problem p {
+            margin: 0;
+            color: #b6bdca;
+            font-size: 0.94rem;
+            line-height: 1.58;
+        }
+
+        .intro-narrative {
+            max-width: 1180px;
+            margin: 0 0 28px;
+        }
+
+        .intro-narrative p {
+            margin: 0 0 14px;
+            color: #c4cad6;
+            font-size: 1.02rem;
+            line-height: 1.72;
+            text-align: justify;
+        }
+
+        .intro-narrative p:last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 760px) {
+            .intro-problems {
+                grid-template-columns: 1fr;
+            }
+
+            .paper-figure {
+                padding: 4px;
+                border-radius: 12px;
+            }
+        }
+
+        /* ===================== comparison carousels ===================== */
+        .task-selector {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .task-selector button {
+            background: #1a1d26;
+            color: #fff;
+            border: 1px solid #444b5c;
+            padding: 10px 18px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.25s;
+        }
+
+        .task-selector button:hover {
+            background: #2a2f3d;
+        }
+
+        .task-selector .active {
+            background: #2f6df6;
+            border-color: #6692f1;
+        }
+
+        .case-header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 1340px;
+            margin: 0 auto 30px auto;
+            padding: 10px 20px;
+        }
+
+        .case-header img {
+            width: 240px;
+            border-radius: 12px;
+            border: 2px solid #333;
+        }
+
+        .case-header .prompt-box {
+            flex: 1;
+            max-width: 700px;
+            text-align: left;
+            font-size: 17px;
+            line-height: 1.5;
+            color: #ddd;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-item {
+            position: relative;
+        }
+
+        .video-item video {
+            width: 100%;
+            border-radius: 12px;
+            border: 2px solid #2a2f3d;
+        }
+
+        .video-item.ours video {
+            border: 2px solid #2f6df6;
+            box-shadow: 0 0 18px rgba(47, 109, 246, 0.45);
+        }
+
+        .video-title {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            pointer-events: none;
+        }
+
+        .video-item.ours .video-title {
+            background: #2f6df6;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1340px;
+            margin: 0 auto;
+        }
+
+        .case-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.45);
+            color: white;
+            border: none;
+            font-size: 42px;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.25s;
+            z-index: 20;
+        }
+
+        .case-btn:hover {
+            background: rgba(0, 0, 0, 0.75);
+        }
+
+        .left-btn {
+            left: -60px;
+        }
+
+        .right-btn {
+            right: -60px;
+        }
+
+        @media (max-width: 1560px) {
+            .left-btn { left: 4px; }
+            .right-btn { right: 4px; }
+        }
+
+        /* ===================== physics pair (bad vs good) ===================== */
+        .failure-grid {
+            display: flex;
+            gap: 56px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .failure-item {
+            width: 480px;
+            max-width: 90vw;
+            position: relative;
+        }
+
+        .failure-item video {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .failure-item.good video {
+            border: 2px solid #2f6df6;
+            box-shadow: 0 0 18px rgba(47, 109, 246, 0.45);
+        }
+
+        .fail-tag {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fail-tag.bad {
+            color: #ff4d4f;
+        }
+
+        .fail-tag.good {
+            color: #52c41a;
+        }
+
+        .fail-method {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .failure-item.good .fail-method {
+            background: #2f6df6;
+        }
+
+        .fail-caption {
+            margin-top: 14px;
+            font-size: 1.1rem;
+            color: #ddd;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* ===================== result tables ===================== */
+        .rbench-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #ffffff;
+            font-size: 15px;
+            margin: 0 auto;
+        }
+
+        .rbench-table th,
+        .rbench-table td {
+            text-align: center;
+            padding: 11px 8px;
+            border-bottom: 1px solid #2a2f3d;
+        }
+
+        .rbench-table th:first-child,
+        .rbench-table td:first-child {
+            text-align: left;
+        }
+
+        .rbench-table thead th {
+            font-weight: 700;
+            border-bottom: 2px solid #666;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .row-sub td:first-child {
+            padding-left: 26px;
+            color: #c3cad6;
+        }
+
+        .row-ours {
+            background-color: rgba(47, 109, 246, 0.22);
+            font-weight: 700;
+        }
+
+        .row-sep td {
+            border-top: 2px solid #4a5566;
+        }
+
+        .delta-pos {
+            color: #52e0a3;
+            font-weight: 700;
+        }
+
+        .delta-neg {
+            color: #ff7a7a;
+        }
+
+        .rbench-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 14px;
+            padding: 6px 20px 18px 20px;
+            margin-top: 18px;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .table-note {
+            text-align: center;
+            color: #aab2c0;
+            font-size: 0.95rem;
+            margin-top: 12px;
+        }
+
+        .result-figs {
+            display: flex;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 30px auto 0 auto;
+            flex-wrap: wrap;
+            padding: 0 20px;
+        }
+
+        .result-fig {
+            flex: 1 1 420px;
+            text-align: center;
+        }
+
+        .result-fig img {
+            width: 100%;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+        }
+
+        .result-fig figcaption {
+            color: #aab2c0;
+            font-size: 0.92rem;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* ===================== NEW: highlights band (dark, on-theme) ===================== */
+        .hl-band {
+            max-width: 1340px;
+            margin: 90px auto 0 auto;
+            padding: 0 20px;
+        }
+
+        .hl-cards {
+            display: flex;
+            gap: 22px;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hl-card {
+            flex: 1 1 230px;
+            max-width: 280px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            padding: 22px 20px 26px;
+            text-align: center;
+            backdrop-filter: blur(6px);
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .hl-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+            border-color: rgba(102, 146, 241, 0.6);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .hl-card .hl-view {
+            font-size: .78rem;
+            color: #7b87a3;
+            text-align: right;
+        }
+
+        .hl-card .hl-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 2px 0 16px;
+            line-height: 1.2;
+        }
+
+        .hl-card .hl-name span {
+            display: block;
+            font-weight: 500;
+            color: #9aa6c0;
+            font-size: .82rem;
+            margin-top: 3px;
+        }
+
+        .hl-card .hl-label {
+            font-size: .74rem;
+            letter-spacing: .12em;
+            color: #8a96b3;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .hl-card .hl-perf {
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: #6cb6ff;
+            margin: 6px 0 14px;
+            line-height: 1;
+        }
+
+        .hl-card .hl-perf.tbd {
+            color: #6b7587;
+        }
+
+        .hl-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.12);
+            margin: 0 8px 14px;
+        }
+
+        .hl-badge {
+            display: inline-block;
+            font-size: .98rem;
+            font-weight: 700;
+            padding: 9px 0;
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .hl-badge.sota {
+            color: #52e0a3;
+            background: rgba(82, 224, 163, 0.13);
+            border: 1px solid rgba(82, 224, 163, 0.32);
+        }
+
+        .hl-badge.rank2 {
+            color: #6cb6ff;
+            background: rgba(108, 182, 255, 0.12);
+            border: 1px solid rgba(108, 182, 255, 0.32);
+        }
+
+        .hl-foot {
+            text-align: center;
+            color: #8a96b3;
+            font-size: .85rem;
+            margin-top: 24px;
+        }
+
+        .hl-why {
+            max-width: 1340px;
+            margin: 70px auto 0 auto;
+            padding: 0 20px;
+        }
+
+        .hl-why-cards {
+            display: flex;
+            gap: 22px;
+            max-width: 1340px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hl-why-card {
+            flex: 1 1 260px;
+            max-width: 310px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            padding: 30px 28px;
+            text-align: center;
+            backdrop-filter: blur(6px);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .hl-why-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+        }
+
+        .hl-why-card h4 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 14px;
+        }
+
+        .hl-why-card p {
+            font-size: 1.08rem;
+            line-height: 1.7;
+            color: #b6bdca;
+            margin: 0;
+        }
+
+        .hl-k {
+            font-weight: 700;
+            color: #6cb6ff;
+        }
+
+        /* ===================== NEW: progress dots + grids ===================== */
+        .q-band {
+            margin-top: 46px;
+        }
+
+        .q-band-title {
+            font-size: 1.18rem;
+            font-weight: 700;
+            color: #cfe0ff;
+            text-align: left;
+            max-width: 1340px;
+            margin: 0 auto 16px auto;
+            padding: 0 20px;
+        }
+
+        .q-dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 18px;
+        }
+
+        .q-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3a4150;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .q-dot.active {
+            background: #2f6df6;
+            transform: scale(1.25);
+        }
+
+        .ood-compare-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            padding: 0 20px;
+        }
+
+        .ood-compare-grid .video-title {
+            position: static;
+            margin-bottom: 8px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .ood-compare-grid video {
+            display: block;
+            aspect-ratio: 832 / 480;
+            object-fit: contain;
+        }
+
+        #qualitative .q-dots {
+            flex-wrap: wrap;
+            padding: 0 20px;
+        }
+
+        #qualitative .q-dot {
+            border: 0;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .ood-compare-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 760px) {
+            .ood-compare-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 480px) {
+            .ood-compare-grid { grid-template-columns: 1fr; }
+        }
+
+        .compare-grid-6 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 1340px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .compare-grid-6 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .policy-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .showcase-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            max-width: 1340px;
+            margin: 0 auto 16px;
+            padding: 0 20px;
+        }
+
+        .showcase-heading .q-band-title {
+            margin: 0;
+            padding: 0;
+        }
+
+        .showcase-hint {
+            color: #8fa1c3;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .showcase-marquee {
+            position: relative;
+            overflow: hidden;
+            padding: 8px 0 10px;
+        }
+
+        .showcase-marquee::before,
+        .showcase-marquee::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: min(10vw, 130px);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .showcase-marquee::before {
+            left: 0;
+            background: linear-gradient(90deg, #06070a 0%, rgba(6, 7, 10, 0) 100%);
+        }
+
+        .showcase-marquee::after {
+            right: 0;
+            background: linear-gradient(270deg, #06070a 0%, rgba(6, 7, 10, 0) 100%);
+        }
+
+        .showcase-rail {
+            overflow: hidden;
+            padding: 7px 0;
+            outline: none;
+            scrollbar-width: none;
+        }
+
+        .showcase-rail + .showcase-rail {
+            margin-top: 12px;
+        }
+
+        .showcase-rail::-webkit-scrollbar {
+            display: none;
+        }
+
+        .showcase-track {
+            display: flex;
+            gap: 16px;
+            width: max-content;
+            padding: 0 8px;
+        }
+
+        .showcase-card {
+            position: relative;
+            flex: 0 0 clamp(250px, 27vw, 360px);
+            overflow: hidden;
+            border: 1px solid rgba(119, 171, 255, 0.28);
+            border-radius: 15px;
+            background: #080b12;
+            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38);
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .showcase-card:hover {
+            transform: translateY(-4px) scale(1.015);
+            border-color: rgba(108, 182, 255, 0.78);
+            box-shadow: 0 14px 34px rgba(18, 79, 158, 0.32);
+            z-index: 2;
+        }
+
+        .showcase-card video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 832 / 480;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .showcase-marquee.is-paused .showcase-card,
+        .showcase-rail.is-paused .showcase-card {
+            border-color: rgba(255, 211, 106, 0.38);
+        }
+
+        .multi-force-band {
+            max-width: 1340px;
+            margin: 74px auto 0;
+            padding: 0 20px;
+        }
+
+        .multi-force-shell {
+            position: relative;
+            overflow: hidden;
+            padding: clamp(24px, 4vw, 48px);
+            border: 1px solid rgba(255, 212, 0, 0.28);
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 90% 0%, rgba(255, 212, 0, 0.16), transparent 34%),
+                radial-gradient(circle at 0% 100%, rgba(62, 113, 255, 0.16), transparent 38%),
+                rgba(10, 13, 21, 0.9);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+        }
+
+        .multi-force-shell::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.2;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+            background-size: 38px 38px;
+            mask-image: linear-gradient(135deg, #000, transparent 62%);
+        }
+
+        .multi-force-heading {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 28px;
+            margin-bottom: 26px;
+        }
+
+        .multi-force-kicker {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffd400;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .multi-force-title {
+            margin: 0;
+            color: #fff;
+            font-size: clamp(1.55rem, 3vw, 2.35rem);
+            line-height: 1.12;
+        }
+
+        .multi-force-copy {
+            max-width: 720px;
+            margin: 12px 0 0;
+            color: #aeb9cc;
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+
+        .multi-force-mode {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 212, 0, 0.35);
+            border-radius: 999px;
+            color: #e9edf6;
+            background: rgba(255, 212, 0, 0.08);
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .multi-force-mode strong {
+            display: grid;
+            place-items: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            color: #080a0f;
+            background: #ffd400;
+            font-size: 0.9rem;
+        }
+
+        .multi-force-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .multi-force-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 17px;
+            background: #05070b;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .multi-force-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 212, 0, 0.65);
+            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.46);
+        }
+
+        .multi-force-card video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 832 / 480;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .multi-force-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
+            padding: 7px 11px;
+            border: 1px solid rgba(255, 212, 0, 0.42);
+            border-radius: 999px;
+            color: #fff3a6;
+            background: rgba(5, 7, 11, 0.78);
+            backdrop-filter: blur(8px);
+            font-size: 0.72rem;
+            font-weight: 750;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        @media (max-width: 700px) {
+            .showcase-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .showcase-card {
+                flex-basis: min(78vw, 330px);
+            }
+
+            .multi-force-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .multi-force-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .policy-row { grid-template-columns: 1fr; }
+        }
+
+        .policy-prompt {
+            margin-top: 10px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            color: #c3cad6;
+            text-align: left;
+        }
+
+        .ablation-band {
+            max-width: 1340px;
+            margin: 100px auto 0;
+            padding: 0 20px;
+        }
+
+        .force-direction-shell {
+            position: relative;
+            overflow: hidden;
+            margin-top: 28px;
+            padding: clamp(18px, 3vw, 34px);
+            border: 1px solid rgba(102, 146, 241, 0.3);
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at center, rgba(255, 212, 0, 0.11), transparent 27%),
+                radial-gradient(circle at 50% 50%, rgba(58, 105, 210, 0.15), transparent 62%),
+                rgba(8, 11, 18, 0.88);
+            box-shadow: 0 26px 64px rgba(0, 0, 0, 0.4);
+        }
+
+        .force-direction-heading {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .force-direction-heading h4 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .force-direction-heading span {
+            color: #8fa1c3;
+            font-size: 0.84rem;
+        }
+
+        .force-direction-stage {
+            position: relative;
+            z-index: 1;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #35415a transparent;
+        }
+
+        .force-direction-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            min-width: 790px;
+        }
+
+        .force-direction-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            background: #030508;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .force-direction-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 212, 0, 0.68);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.46);
+        }
+
+        .force-direction-card video,
+        .force-direction-card img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 832 / 480;
+            background: #030508;
+        }
+
+        .force-direction-card video {
+            object-fit: cover;
+        }
+
+        .force-direction-card img {
+            object-fit: contain;
+        }
+
+        .direction-angle,
+        .condition-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 212, 0, 0.42);
+            border-radius: 999px;
+            color: #fff5b8;
+            background: rgba(3, 5, 8, 0.78);
+            backdrop-filter: blur(8px);
+            font-size: 0.72rem;
+            font-weight: 750;
+            letter-spacing: 0.06em;
+            pointer-events: none;
+        }
+
+        .force-direction-card.condition {
+            border-color: rgba(102, 146, 241, 0.72);
+            box-shadow: 0 0 0 1px rgba(102, 146, 241, 0.2), 0 18px 42px rgba(20, 62, 145, 0.32);
+        }
+
+        .force-direction-card.condition::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: inset 0 0 28px rgba(102, 146, 241, 0.16);
+            pointer-events: none;
+        }
+
+        .condition-label {
+            color: #dce7ff;
+            border-color: rgba(102, 146, 241, 0.55);
+        }
+
+        .force-magnitude-shell {
+            margin-top: 34px;
+            background:
+                radial-gradient(circle at 0% 50%, rgba(45, 118, 255, 0.14), transparent 32%),
+                radial-gradient(circle at 100% 50%, rgba(255, 67, 76, 0.14), transparent 32%),
+                rgba(8, 11, 18, 0.88);
+        }
+
+        .force-magnitude-scale {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: auto minmax(160px, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+            margin: 4px 8px 22px;
+        }
+
+        .force-magnitude-scale span {
+            color: #dce5f5;
+            font-size: 0.84rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .magnitude-arrow {
+            height: 24px;
+            min-width: 180px;
+            background: linear-gradient(90deg, #2f7cff 0%, #7a63ff 48%, #ff4652 88%);
+            clip-path: polygon(0 28%, 91% 28%, 91% 0, 100% 50%, 91% 100%, 91% 72%, 0 72%);
+            filter: drop-shadow(0 0 9px rgba(116, 91, 255, 0.5));
+        }
+
+        .force-magnitude-stage {
+            position: relative;
+            z-index: 1;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #35415a transparent;
+        }
+
+        .force-magnitude-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            min-width: 980px;
+        }
+
+        .force-magnitude-grid .force-direction-card:nth-child(1) {
+            border-color: rgba(47, 124, 255, 0.45);
+        }
+
+        .force-magnitude-grid .force-direction-card:nth-child(2) {
+            border-color: rgba(85, 108, 255, 0.45);
+        }
+
+        .force-magnitude-grid .force-direction-card:nth-child(3) {
+            border-color: rgba(132, 91, 234, 0.45);
+        }
+
+        .force-magnitude-grid .force-direction-card:nth-child(4) {
+            border-color: rgba(205, 72, 143, 0.45);
+        }
+
+        .force-magnitude-grid .force-direction-card:nth-child(5) {
+            border-color: rgba(255, 70, 82, 0.5);
+        }
+
+        @media (max-width: 700px) {
+            .force-direction-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .force-direction-grid {
+                min-width: 720px;
+            }
+
+            .force-magnitude-scale {
+                grid-template-columns: auto minmax(110px, 1fr) auto;
+                gap: 8px;
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .force-magnitude-scale span {
+                font-size: 0.72rem;
+            }
+
+            .force-magnitude-grid {
+                min-width: 900px;
+            }
+        }
+
+        /* ===================== NEW: compact quantitative tables ===================== */
+        .quant-band {
+            max-width: 1340px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .quant-tables {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .quant-card {
+            flex: 1 1 320px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            padding: 14px 18px 18px;
+        }
+
+        .quant-card.wide {
+            flex-basis: 100%;
+        }
+
+        .tbl-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 4px 0 12px;
+            text-align: left;
+        }
+
+        .tbl-title small {
+            display: block;
+            font-weight: 400;
+            color: #8a96b3;
+            font-size: .82rem;
+            margin-top: 2px;
+        }
+
+        .rbench-table td.blank {
+            color: #59616e;
+        }
+
+        .quant-card .rbench-table {
+            font-size: 13px;
+        }
+
+        .quant-card .rbench-table th,
+        .quant-card .rbench-table td {
+            padding: 8px 6px;
+        }
+
+        .benchmark-block {
+            margin-top: 28px;
+        }
+
+        .experiment-overview,
+        .finding-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin: 26px 0 36px;
+        }
+
+        .experiment-card,
+        .finding-card {
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+            padding: 20px;
+        }
+
+        .experiment-card h4,
+        .finding-card h4 {
+            margin: 0 0 9px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .experiment-card p,
+        .finding-card p {
+            margin: 0;
+            color: #b6bdca;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .finding-card strong {
+            color: #76c7ff;
+        }
+
+        .finding-kicker {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: #69d4ff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .experiment-note {
+            margin: 12px 0 0;
+            color: #8f9ab0;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .benchmark-block + .benchmark-block {
+            margin-top: 42px;
+        }
+
+        .benchmark-caption {
+            margin: 0 0 14px;
+            color: #c3cad6;
+            font-size: 0.96rem;
+            line-height: 1.55;
+        }
+
+        .metric-legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 0 0 12px;
+            color: #aab2c0;
+            font-size: 0.88rem;
+        }
+
+        .metric-table-wrap {
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 14px;
+            background: rgba(8, 11, 18, 0.72);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .metric-table {
+            width: 100%;
+            min-width: 1260px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            color: #f4f7ff;
+            font-size: 0.78rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-table col.evaluation-col {
+            width: 124px;
+        }
+
+        .metric-table col.method-col {
+            width: 242px;
+        }
+
+        .metric-table th,
+        .metric-table td {
+            padding: 8px 7px;
+            text-align: center;
+            border-bottom: 1px solid #29303e;
+            white-space: nowrap;
+        }
+
+        .metric-table thead th {
+            background: rgba(255, 255, 255, 0.06);
+            color: #e8eefc;
+            font-weight: 700;
+            line-height: 1.25;
+            white-space: normal;
+            vertical-align: middle;
+        }
+
+        .metric-table thead tr:first-child th {
+            border-bottom-color: #596579;
+            height: 42px;
+        }
+
+        .metric-table thead tr:last-child th {
+            height: 58px;
+        }
+
+        .metric-table .method-cell {
+            text-align: left;
+        }
+
+        .metric-table tbody tr {
+            height: 42px;
+        }
+
+        .metric-table .evaluation-cell {
+            width: 112px;
+            color: #cbd6ea;
+            font-weight: 700;
+            line-height: 1.35;
+            vertical-align: middle;
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .metric-table .group-start > * {
+            border-top: 2px solid #566277;
+        }
+
+        .metric-table tbody tr:last-child > * {
+            border-bottom: 0;
+        }
+
+        .metric-table .ours-row {
+            background: rgba(47, 109, 246, 0.14);
+        }
+
+        .metric-best {
+            color: #76c7ff;
+            font-weight: 800;
+        }
+
+        .metric-second {
+            color: #ffd36a;
+            font-weight: 700;
+        }
+
+        @media (max-width: 700px) {
+            .experiment-overview,
+            .finding-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-table-wrap {
+                margin-right: -20px;
+                border-radius: 12px 0 0 12px;
+            }
+
+            .benchmark-caption {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (min-width: 701px) and (max-width: 1050px) {
+            .experiment-overview,
+            .finding-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hl-title { font-size: 1.7rem; }
+            .hl-card .hl-perf { font-size: 2rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="main-content">
+
+        <!-- ===== global background video ===== -->
+        <video autoplay muted loop id="background-video">
+            <source src="./videos/0_grid_output.mp4" type="video/mp4">
+        </video>
+
+        <!-- ====================== -->
+        <!--   Intro  -->
+        <!-- ====================== -->
+        <section id="intro">
+            <div class="content">
+                <h2 class="brand-title">
+                    <img class="brand-logo" src="./assets/3d4d0d1d-25f8-4bfc-ab5d-c3a45b527a99.png" alt="PhysForce logo">
+                    <span class="title-art2">PhysForce</span>
+                </h2>
+                <div class="subtitle-line">
+                    Physics-aware Force Control for Interactive Video World Model
+                </div>
+
+                <div class="authors" aria-label="Authors">
+                    <span class="author-block">Xuancheng Xu<sup>1</sup></span>
+                    <span class="author-block">Xiaofeng Wang<sup>2</sup></span>
+                    <span class="author-block">Yue Ma<sup>3</sup></span>
+                    <span class="author-block">Zheng Zhu<sup>4</sup></span>
+                    <span class="author-block">Bing-Kun Bao<sup>5,&dagger;</sup></span>
+                </div>
+                <div class="author-affiliation" aria-label="Affiliations">
+                    <span class="affiliation-block"><sup>1</sup> Nanjing University of Posts and Telecommunications</span>
+                    <span class="affiliation-block"><sup>2</sup> Tsinghua University</span>
+                    <span class="affiliation-block"><sup>3</sup> Hong Kong University of Science and Technology</span>
+                    <span class="affiliation-block"><sup>4</sup> GigaAI</span>
+                    <span class="affiliation-block"><sup>5</sup> Hefei University of Technology</span>
+                </div>
+                <p class="author-note"><sup>&dagger;</sup> Corresponding Author</p>
+
+                <h3 class="hero-demo-title">Demo Video</h3>
+                <div class="hero-demo">
+                    <video controls playsinline preload="metadata"
+                        poster="./videos/demo_video_720p_poster.jpg">
+                        <source src="./videos/demo_video_720p.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================= -->
+        <!--   Abstract Section    -->
+        <!-- ========================= -->
+        <section id="abstract-section" style="max-width:1340px; margin:40px auto 0 auto; padding:0 20px;">
+            <h3 class="section-head">Abstract</h3>
+            <p style="font-size:1.1rem; line-height:1.75; color:#e8eaf0; text-align:justify; max-width:none; margin:0 0 1.1rem 0;">
+                Interactive video world models aim to predict how visual environments evolve in response to user
+                interventions, including physically consistent state changes induced by applied forces. Existing
+                methods often represent forces as motion trajectories, which may introduce inappropriate motion
+                priors, causing the model to over-rely on encoded displacement patterns. More fundamentally, the
+                model's internal representations do not reliably localize force-induced state changes, making it
+                difficult to associate applied forces with their resulting physical responses. Also, limited
+                force-annotated data make it difficult to produce physically consistent and temporally stable
+                predictions in unseen scenarios.
+            </p>
+            <p style="font-size:1.1rem; line-height:1.75; color:#e8eaf0; text-align:justify; max-width:none; margin:0;">
+                To address these limitations, we propose <span class="hl-k">PhysForce</span>, a two-stage framework
+                that integrates supervised fine-tuning and reinforcement learning through three complementary
+                components. During supervised fine-tuning, (1) the <b>Latent Force Intervention Encoder</b> maps force
+                location, direction, and magnitude into the video latent space without exposing future motion; and
+                (2) the <b>Physics Attribution Network</b> associates force interventions with localized changes in
+                the latent state, strengthening the learning of physical responses to applied forces. During
+                reinforcement learning, (3) <b>Physics-Aware Reinforcement Learning</b> uses self-supervised rewards on out-of-distribution
+                videos to improve physical consistency and generalization. Extensive experiments show that PhysForce
+                improves force responsiveness, physical consistency, and generalization, demonstrating its
+                effectiveness for interactive video world models.
+            </p>
+        </section>
+
+        <!-- ========================= -->
+        <!--   Motivation              -->
+        <!-- ========================= -->
+        <section id="teaser-section" style="max-width:1340px; margin:10px auto 40px auto; padding:0 20px;">
+            <h3 class="section-head">Motivation</h3>
+            <div class="paper-figure">
+                <img src="./assets/physforce_figure1.png"
+                    alt="Figure 2: inappropriate trajectory priors, force-response localization, and physically consistent generation with PhysForce">
+            </div>
+            <p class="figure-caption"><strong>Figure 2.</strong> (a) Existing methods encode forces as moving Gaussian blobs, introducing inappropriate trajectory priors that may produce physically implausible responses. (b) Existing methods' internal representations such as self-attention, cross-attention, and PCA features fail to reliably localize force-induced state changes, whereas PAN provides more accurate response localization. (c) PARL further improves the physical consistency of generated videos.</p>
+
+            <div class="intro-problems">
+                <article class="intro-problem">
+                    <span class="panel-tag">a</span>
+                    <h4>Inappropriate Trajectory Priors</h4>
+                    <p>Moving Gaussian blobs can make the model over-rely on encoded displacement patterns instead of inferring force-induced results.</p>
+                </article>
+                <article class="intro-problem">
+                    <span class="panel-tag">b</span>
+                    <h4>Unreliable Response Localization</h4>
+                    <p>Attention maps and PCA features do not reliably localize force-induced state changes, limiting explicit supervision for physical response regions.</p>
+                </article>
+                <article class="intro-problem">
+                    <span class="panel-tag">c</span>
+                    <h4>Limited OOD Consistency</h4>
+                    <p>Limited annotated force data make physically consistent and temporally stable predictions difficult in unseen scenarios.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- ====================================================== -->
+        <!--  PhysForce contributions                                -->
+        <!-- ====================================================== -->
+        <section class="hl-why" id="contributions">
+            <h3 class="section-head">Key Contributions</h3>
+            <div class="hl-why-cards">
+                <div class="hl-why-card">
+                    <h4>Latent Force Intervention Encoder</h4>
+                    <p>LFIE encodes force location, direction, and magnitude in the video latent space <span class="hl-k">without trajectory leakage</span>, allowing the model to predict state changes caused by the applied force.</p>
+                </div>
+                <div class="hl-why-card">
+                    <h4>Physics Attribution Network</h4>
+                    <p>PAN learns a force-conditioned response map that <span class="hl-k">localizes state changes</span> associated with the intervention.</p>
+                </div>
+                <div class="hl-why-card">
+                    <h4>Physics-Aware Reinforcement Learning</h4>
+                    <p>PARL improves physical consistency and generalization using <span class="hl-k">attribution-guided self-supervised rewards</span> from videos, with a Dynamic Gate mitigating reward hacking.</p>
+                </div>
+                <div class="hl-why-card">
+                    <h4>New State of the Art</h4>
+                    <p>PhysForce establishes a <span class="hl-k">new state of the art on both OOD and ID benchmarks</span>, decisively outperforming prior methods in force controllability and physics alignment while maintaining high visual quality and temporal coherence.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================== -->
+        <!--  NEW: Performance highlights (vs. base model)           -->
+        <!-- ====================================================== -->
+        <section class="hl-band" id="highlights">
+            <h3 class="section-head">Performance at a Glance</h3>
+            <div class="hl-cards">
+                <a class="hl-card" href="#rbench-results">
+                    <div class="hl-view">details &darr;</div>
+                    <div class="hl-name">Force Prompting OOD <span>DCS &uarr;</span></div>
+                    <div class="hl-label">Over second-best method</div>
+                    <div class="hl-perf">+36.0%</div>
+                    <div class="hl-divider"></div>
+                    <div class="hl-label">PhysForce vs. second best</div>
+                    <div class="hl-badge sota">0.782 vs. 0.575</div>
+                </a>
+
+                <a class="hl-card" href="#rbench-results">
+                    <div class="hl-view">details &darr;</div>
+                    <div class="hl-name">Force Prompting OOD <span>RMM &uarr;</span></div>
+                    <div class="hl-label">Over second-best method</div>
+                    <div class="hl-perf">+71.2%</div>
+                    <div class="hl-divider"></div>
+                    <div class="hl-label">PhysForce vs. second best</div>
+                    <div class="hl-badge sota">2.488 vs. 1.453</div>
+                </a>
+
+                <a class="hl-card" href="#policy-results">
+                    <div class="hl-view">details &darr;</div>
+                    <div class="hl-name">GT80 ID <span>Weighted IoU &uarr;</span></div>
+                    <div class="hl-label">Over second-best method</div>
+                    <div class="hl-perf">+17.6%</div>
+                    <div class="hl-divider"></div>
+                    <div class="hl-label">PhysForce vs. second best</div>
+                    <div class="hl-badge sota">0.614 vs. 0.522</div>
+                </a>
+
+                <a class="hl-card" href="#policy-results">
+                    <div class="hl-view">details &darr;</div>
+                    <div class="hl-name">GT80 ID <span>ST-IoU &uarr;</span></div>
+                    <div class="hl-label">Over second-best method</div>
+                    <div class="hl-perf">+30.2%</div>
+                    <div class="hl-divider"></div>
+                    <div class="hl-label">PhysForce vs. second best</div>
+                    <div class="hl-badge sota">0.332 vs. 0.255</div>
+                </a>
+            </div>
+            <p class="hl-foot">Relative gains compare PhysForce with the second-best method in each benchmark's qualitative evaluation.</p>
+        </section>
+
+        <!-- ========================= -->
+        <!--   NEW: Method Section     -->
+        <!-- ========================= -->
+        <section id="method-section" style="max-width:1340px; margin:90px auto 0 auto; padding:0 20px;">
+            <h3 class="section-head">Method Overview</h3>
+            <div class="paper-figure">
+                <img src="./assets/physforce_figure2.png"
+                    alt="Figure 3: the two-stage PhysForce framework with force-conditioned supervised fine-tuning and physics-aware reinforcement learning">
+            </div>
+            <p class="figure-caption"><strong>Figure 3. Overview of PhysForce.</strong> Stage 1 performs force-conditioned supervised fine-tuning with LFIE and PAN, while Stage 2 applies PARL with a self-supervised reward and Dynamic Gate.</p>
+
+            <div class="method-cols three">
+                <div class="method-col">
+                    <h4><i class="fa-solid fa-location-arrow"></i>Stage 1 &middot; LFIE</h4>
+                    <p>
+                        The Latent Force Intervention Encoder converts force location, direction, and magnitude into a
+                        latent force embedding. Conditioning the video model in latent space avoids exposing future
+                        displacement through trajectory prompts.
+                    </p>
+                </div>
+                <div class="method-col">
+                    <h4><i class="fa-solid fa-crosshairs"></i>Stage 1 &middot; PAN</h4>
+                    <p>
+                        The Physics Attribution Network predicts where the force changes the latent state. An
+                        attribution loss aligns these predictions with inter-frame changes in the ground-truth video,
+                        explicitly coupling intervention and response.
+                    </p>
+                </div>
+                <div class="method-col">
+                    <h4><i class="fa-solid fa-scale-balanced"></i>Stage 2 &middot; PARL</h4>
+                    <p>
+                        Physics-Aware Region Reinforcement Learning filters unreliable rollouts with a dynamic gate and
+                        uses self-supervised, attribution-guided rewards to improve physical consistency and
+                        generalization on unseen scenes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!--  PART 2: Qualitative Comparison (OOD cases, 5 methods)       -->
+        <!-- ========================================================== -->
+        <section id="qualitative" style="margin-top:100px;">
+            <h3 class="section-head" style="max-width:1340px; margin-left:auto; margin-right:auto; padding:0 20px;">
+                Qualitative Comparison</h3>
+
+            <!-- Band 1: OOD Point Force -->
+            <div class="q-band">
+                <h4 class="q-band-title">Point Force &middot; OOD</h4>
+                <div class="video-wrapper">
+                    <button id="q2-point-prev" type="button" aria-label="Previous point force case" class="case-btn left-btn">&#10094;</button>
+                    <div id="q2-point-container"></div>
+                    <button id="q2-point-next" type="button" aria-label="Next point force case" class="case-btn right-btn">&#10095;</button>
+                </div>
+                <div id="q2-point-dots" class="q-dots"></div>
+            </div>
+
+            <!-- Band 2: OOD Wind Force -->
+            <div class="q-band">
+                <h4 class="q-band-title">Wind Force &middot; OOD</h4>
+                <div class="video-wrapper">
+                    <button id="q2-wind-prev" type="button" aria-label="Previous wind force case" class="case-btn left-btn">&#10094;</button>
+                    <div id="q2-wind-container"></div>
+                    <button id="q2-wind-next" type="button" aria-label="Next wind force case" class="case-btn right-btn">&#10095;</button>
+                </div>
+                <div id="q2-wind-dots" class="q-dots"></div>
+            </div>
+
+            <!-- Band 3: ID comparison -->
+            <div class="q-band">
+                <h4 class="q-band-title">GT80 &middot; ID</h4>
+                <div class="video-wrapper">
+                    <button id="q2-id-prev" type="button" aria-label="Previous ID case" class="case-btn left-btn">&#10094;</button>
+                    <div id="q2-id-container"></div>
+                    <button id="q2-id-next" type="button" aria-label="Next ID case" class="case-btn right-btn">&#10095;</button>
+                </div>
+                <div id="q2-id-dots" class="q-dots"></div>
+            </div>
+
+            <!-- Band 4: PhysForce annotated showcase gallery -->
+            <div class="q-band">
+                <h3 class="section-head">Gallery</h3>
+                <div class="showcase-marquee">
+                    <div id="show-point-rail" class="showcase-rail" tabindex="0" aria-label="Point-force result videos; hover or focus to pause scrolling">
+                        <div class="showcase-track"></div>
+                    </div>
+                    <div id="show-wind-rail" class="showcase-rail" tabindex="0" aria-label="Wind-force result videos; hover or focus to pause scrolling">
+                        <div class="showcase-track"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Band 5: Multi-force extension -->
+            <div class="q-band multi-force-band">
+                <div class="multi-force-shell">
+                    <div class="multi-force-heading">
+                        <div>
+                            <span class="multi-force-kicker">Beyond a single intervention</span>
+                            <h4 class="multi-force-title">Expand to Multi-Force</h4>
+                            <p class="multi-force-copy">PhysForce supports multiple localized forces with independent directions and magnitudes in the same scene.</p>
+                        </div>
+                        <span class="multi-force-mode"><strong>2</strong> force vectors per scene</span>
+                    </div>
+                    <div id="multi-force-grid" class="multi-force-grid">
+                        <div class="multi-force-card">
+                            <span class="multi-force-badge">Multi-Force</span>
+                            <video muted playsinline controls preload="metadata" aria-label="Multi-force interaction with two ornaments">
+                                <source src="./compared_videos_PhysForce/multi_force/case1.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="multi-force-card">
+                            <span class="multi-force-badge">Multi-Force</span>
+                            <video muted playsinline controls preload="metadata" aria-label="Multi-force interaction with an asymmetric domino row">
+                                <source src="./compared_videos_PhysForce/multi_force/case2.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            const q2models = [
+                {
+                                "key": "wan2.2-5B",
+                                "idKey": "Wan2.2-5B",
+                                "name": "Wan2.2-5B"
+                },
+                {
+                                "key": "wan-move",
+                                "idKey": "Wan-Move",
+                                "name": "Wan-Move"
+                },
+                {
+                                "key": "forceprompt",
+                                "idKey": "ForcePrompting",
+                                "name": "Force Prompting"
+                },
+                {
+                                "key": "goalforce",
+                                "idKey": "GoalForce",
+                                "name": "GoalForce"
+                },
+                {
+                                "key": "physforce",
+                                "idKey": "PhysForce",
+                                "name": "PhysForce (Ours)",
+                                "ours": true
+                }
+];
+            const q2data = {
+                "point": {
+                                "label": "Point Force",
+                                "cases": [
+                                                "case_point_00000",
+                                                "case_point_00011",
+                                                "case_point_00021",
+                                                "case_point_00023",
+                                                "case_point_00026",
+                                                "case_point_00029",
+                                                "case_point_00067",
+                                                "case_point_00083",
+                                                "case_point_00104"
+                                ]
+                },
+                "wind": {
+                                "label": "Wind Force",
+                                "cases": [
+                                                "case_wind_00002",
+                                                "case_wind_00005",
+                                                "case_wind_00010",
+                                                "case_wind_00011",
+                                                "case_wind_00021",
+                                                "case_wind_00023",
+                                                "case_wind_00026",
+                                                "case_wind_00041",
+                                                "case_wind_00043"
+                                ]
+                },
+                "id": {
+                                "label": "GT80 ID",
+                                "root": "./compared_videos_PhysForce/comparison_demo/id",
+                                "modelKey": "idKey",
+                                "cases": [
+                                                "case-0001",
+                                                "case-00048",
+                                                "case-00070"
+                                ]
+                }
+};
+
+            function createFirstFrameLoop(video, holdMs = 800) {
+                let active = false;
+                let holdTimer = null;
+                let waitingForData = false;
+
+                const clearHold = () => {
+                    if (holdTimer !== null) {
+                        clearTimeout(holdTimer);
+                        holdTimer = null;
+                    }
+                };
+
+                const cancelDataWait = () => {
+                    if (waitingForData) {
+                        video.removeEventListener("loadeddata", startHold);
+                        waitingForData = false;
+                    }
+                };
+
+                const startHold = () => {
+                    waitingForData = false;
+                    if (!active) return;
+                    clearHold();
+                    video.pause();
+                    video.currentTime = 0;
+                    holdTimer = window.setTimeout(() => {
+                        holdTimer = null;
+                        if (active && document.contains(video)) {
+                            video.play().catch(() => {});
+                        }
+                    }, holdMs);
+                };
+
+                const holdThenPlay = () => {
+                    clearHold();
+                    cancelDataWait();
+                    video.pause();
+                    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+                        startHold();
+                    } else {
+                        waitingForData = true;
+                        video.addEventListener("loadeddata", startHold, { once: true });
+                        video.preload = "auto";
+                        video.load();
+                    }
+                };
+
+                const handleEnded = () => {
+                    if (active) holdThenPlay();
+                };
+                video.addEventListener("ended", handleEnded);
+
+                return {
+                    setActive(value) {
+                        if (active === value) return;
+                        active = value;
+                        if (active) {
+                            holdThenPlay();
+                        } else {
+                            clearHold();
+                            cancelDataWait();
+                            video.pause();
+                        }
+                    },
+                    destroy() {
+                        active = false;
+                        clearHold();
+                        cancelDataWait();
+                        video.removeEventListener("ended", handleEnded);
+                        video.pause();
+                    }
+                };
+            }
+
+            function buildQ2Carousel(catKey) {
+                const data = q2data[catKey];
+                let idx = 0;
+                const container = document.getElementById(`q2-${catKey}-container`);
+                const dots = document.getElementById(`q2-${catKey}-dots`);
+
+                function render() {
+                    const caseKey = data.cases[idx];
+                    const root = data.root || "./compared_videos_PhysForce/comparison_demo/ood";
+                    container.querySelectorAll("video").forEach(video => {
+                        if (video.firstFrameLoop) video.firstFrameLoop.destroy();
+                        else video.pause();
+                    });
+                    container.className = "ood-compare-grid";
+                    container.innerHTML = q2models.map(m => {
+                        const modelFile = data.modelKey ? m[data.modelKey] : m.key;
+                        const src = `${root}/${caseKey}/${modelFile}.mp4`;
+                        return `
+                        <div class="video-item ${m.ours ? "ours" : ""}">
+                            <div class="video-title">${m.name}</div>
+                            <video muted playsinline controls preload="metadata" aria-label="${m.name}, ${data.label} comparison ${idx + 1}"><source src="${src}" type="video/mp4"></video>
+                        </div>`;
+                    }).join("");
+
+                    container.querySelectorAll("video").forEach(video => {
+                        video.firstFrameLoop = createFirstFrameLoop(video);
+                        video.firstFrameLoop.setActive(true);
+                    });
+
+                    dots.innerHTML = data.cases.map((_, i) => `<button type="button" class="q-dot ${i === idx ? "active" : ""}" data-i="${i}" aria-label="${data.label} comparison ${i + 1}" aria-current="${i === idx ? "true" : "false"}"></button>`).join("");
+                    dots.querySelectorAll(".q-dot").forEach(d => d.addEventListener("click", () => { idx = +d.dataset.i; render(); }));
+                }
+
+                document.getElementById(`q2-${catKey}-prev`).addEventListener("click", () => { const n = data.cases.length; idx = (idx - 1 + n) % n; render(); });
+                document.getElementById(`q2-${catKey}-next`).addEventListener("click", () => { const n = data.cases.length; idx = (idx + 1) % n; render(); });
+                render();
+            }
+
+            ["point", "wind", "id"].forEach(buildQ2Carousel);
+
+            (function () {
+                const videos = document.querySelectorAll("#multi-force-grid video");
+                const playback = new Map();
+                videos.forEach(video => playback.set(video, createFirstFrameLoop(video)));
+                if ("IntersectionObserver" in window) {
+                    const observer = new IntersectionObserver(entries => {
+                        entries.forEach(entry => {
+                            playback.get(entry.target).setActive(entry.isIntersecting);
+                        });
+                    }, { threshold: 0.25 });
+                    videos.forEach(video => observer.observe(video));
+                } else {
+                    videos.forEach(video => playback.get(video).setActive(true));
+                }
+            })();
+
+            (function () {
+                const galleryRoot = "./compared_videos_PhysForce/more_results_annotated";
+                const gallery = document.querySelector(".showcase-marquee");
+                const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                let galleryHovered = false;
+                gallery.addEventListener("mouseenter", () => {
+                    galleryHovered = true;
+                    gallery.classList.add("is-paused");
+                });
+                gallery.addEventListener("mouseleave", () => {
+                    galleryHovered = false;
+                    gallery.classList.remove("is-paused");
+                });
+                const galleryData = {
+                    point: [
+                        "point_car.mp4", "point-02-01.mp4", "point-02-04.mp4", "point-03-02.mp4",
+                        "point-04-03.mp4", "point-04-04.mp4", "point-06-02.mp4", "point-06-03.mp4",
+                        "point-06-04.mp4", "point-07-01.mp4", "point-07-02.mp4", "point-07-03.mp4",
+                        "point-08-01.mp4", "point-08-02.mp4", "point-08-03.mp4", "point-09-02.mp4",
+                        "point-09-03.mp4", "point-10-01.mp4", "point-11-02.mp4", "point-12-02.mp4",
+                        "point-12-03.mp4", "point-12-04.mp4"
+                    ],
+                    wind: [
+                        "wind_cyber_smoke.mp4", "wind_noir_hair.mp4", "wind-01-02.mp4", "wind-04-01.mp4",
+                        "wind-04-04.mp4", "wind-06-01.mp4", "wind-06-02.mp4", "wind-07-03.mp4",
+                        "wind-09-02.mp4", "wind-09-03.mp4", "wind-10-03.mp4", "wind-11-01.mp4",
+                        "wind-11-04.mp4", "wind-11-02.mp4", "wind-real-001.mp4", "wind-real-006.mp4",
+                        "wind-real-009.mp4", "wind-real-010.mp4", "wind-real-014.mp4", "wind-real-020.mp4",
+                        "wind-real-016.mp4"
+                    ]
+                };
+
+                function buildAutoRail(kind, files, speed) {
+                    const rail = document.getElementById(`show-${kind}-rail`);
+                    const track = rail.querySelector(".showcase-track");
+                    track.innerHTML = files.map((file, i) => `
+                        <div class="showcase-card">
+                            <video muted playsinline preload="metadata" aria-label="${kind} force result ${i + 1}">
+                                <source src="${galleryRoot}/${file}" type="video/mp4">
+                            </video>
+                        </div>`).join("");
+
+                    const videos = track.querySelectorAll("video");
+                    const playback = new Map();
+                    videos.forEach(video => playback.set(video, createFirstFrameLoop(video)));
+                    if ("IntersectionObserver" in window) {
+                        const observer = new IntersectionObserver(entries => {
+                            entries.forEach(entry => {
+                                playback.get(entry.target).setActive(entry.isIntersecting);
+                            });
+                        }, { root: rail, threshold: 0.15 });
+                        videos.forEach(video => observer.observe(video));
+                    } else {
+                        videos.forEach(video => playback.get(video).setActive(true));
+                    }
+
+                    let focusPaused = false;
+                    let previousTime = performance.now();
+                    const setFocusPaused = value => {
+                        focusPaused = value;
+                        rail.classList.toggle("is-paused", prefersReducedMotion || value);
+                    };
+
+                    rail.classList.toggle("is-paused", prefersReducedMotion);
+                    rail.addEventListener("focusin", () => setFocusPaused(true));
+                    rail.addEventListener("focusout", () => setFocusPaused(false));
+
+                    function move(timestamp) {
+                        if (!prefersReducedMotion && !galleryHovered && !focusPaused && !document.hidden && track.firstElementChild) {
+                            const elapsed = Math.min(timestamp - previousTime, 50);
+                            rail.scrollLeft += speed * elapsed / 1000;
+                            const first = track.firstElementChild;
+                            const gap = parseFloat(getComputedStyle(track).gap) || 0;
+                            const step = first.getBoundingClientRect().width + gap;
+                            if (rail.scrollLeft >= step) {
+                                rail.scrollLeft -= step;
+                                track.appendChild(first);
+                            }
+                        }
+                        previousTime = timestamp;
+                        requestAnimationFrame(move);
+                    }
+                    requestAnimationFrame(move);
+                }
+
+                buildAutoRail("point", galleryData.point, 44);
+                buildAutoRail("wind", galleryData.wind, 36);
+            })();
+        </script>
+
+        <!-- ========================================================== -->
+        <!--  PART 3: Quantitative Results                              -->
+        <!-- ========================================================== -->
+        <section id="rbench-results" style="margin-top:100px;">
+            <div class="quant-band">
+                <h3 class="section-head">Quantitative Results</h3>
+                <div class="benchmark-block">
+                    <h4 class="tbl-title">Force Prompting Out-of-Distribution Benchmark</h4>
+                    <p class="benchmark-caption">Comparison and ablation results for force alignment and video quality.</p>
+                    <div class="metric-legend" aria-label="Result highlighting legend">
+                        <span><span class="metric-best">Best</span> result</span>
+                        <span><span class="metric-second">Second-best</span> result</span>
+                    </div>
+                    <div class="metric-table-wrap" tabindex="0" aria-label="Scrollable OOD quantitative results table">
+                        <table class="metric-table">
+                            <colgroup>
+                                <col class="evaluation-col">
+                                <col class="method-col">
+                                <col span="10">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" scope="col">Evaluation</th>
+                                    <th rowspan="2" scope="col" class="method-cell">Method</th>
+                                    <th colspan="5" scope="colgroup">Force Alignment</th>
+                                    <th colspan="5" scope="colgroup">Video Quality</th>
+                                </tr>
+                                <tr>
+                                    <th scope="col">DCS &uarr;</th><th scope="col">DA@30&deg; &uarr;</th><th scope="col">DA@45&deg; &uarr;</th><th scope="col">MRR &uarr;</th><th scope="col">RMM &uarr;</th>
+                                    <th scope="col">CLIP-T &uarr;</th><th scope="col">PickScore &uarr;</th><th scope="col">Motion Smoothness &uarr;</th><th scope="col">Aesthetic Quality &uarr;</th><th scope="col">Imaging Quality &uarr;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th rowspan="4" scope="rowgroup" class="evaluation-cell">Qualitative<br>Evaluation</th>
+                                    <td class="method-cell">Wan-Move</td><td>0.333</td><td>0.392</td><td>0.499</td><td>0.210</td><td>0.206</td><td>0.295</td><td>19.942</td><td><span class="metric-best">0.997</span></td><td>47.413</td><td>62.237</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">Force Prompting</td><td><span class="metric-second">0.575</span></td><td><span class="metric-second">0.714</span></td><td><span class="metric-second">0.748</span></td><td><span class="metric-second">0.810</span></td><td><span class="metric-second">1.453</span></td><td><span class="metric-second">0.306</span></td><td><span class="metric-second">20.797</span></td><td><span class="metric-second">0.996</span></td><td><span class="metric-second">47.568</span></td><td><span class="metric-second">62.238</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">GoalForce</td><td>0.392</td><td>0.490</td><td>0.560</td><td>0.389</td><td>0.469</td><td>0.301</td><td>20.046</td><td><span class="metric-second">0.996</span></td><td>47.498</td><td>62.059</td>
+                                </tr>
+                                <tr class="ours-row">
+                                    <td class="method-cell"><strong>PhysForce (Ours)</strong></td><td><span class="metric-best">0.782</span></td><td><span class="metric-best">0.835</span></td><td><span class="metric-best">0.863</span></td><td><span class="metric-best">0.952</span></td><td><span class="metric-best">2.488</span></td><td><span class="metric-best">0.315</span></td><td><span class="metric-best">21.065</span></td><td><span class="metric-second">0.996</span></td><td><span class="metric-best">49.048</span></td><td><span class="metric-best">64.352</span></td>
+                                </tr>
+
+                                <tr class="group-start">
+                                    <th rowspan="5" scope="rowgroup" class="evaluation-cell">Ablation Study<br>Stage 1</th>
+                                    <td class="method-cell">S1: Wan2.2-5B Base</td><td>0.010</td><td>0.190</td><td>0.252</td><td>0.608</td><td>1.154</td><td><span class="metric-best">0.316</span></td><td><span class="metric-best">21.144</span></td><td><span class="metric-best">0.997</span></td><td><span class="metric-best">48.803</span></td><td><span class="metric-best">62.833</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">S2: S1 w/ LFIE</td><td><span class="metric-second">0.614</span></td><td>0.672</td><td><span class="metric-second">0.768</span></td><td><span class="metric-best">0.908</span></td><td>1.987</td><td>0.308</td><td>20.830</td><td>0.995</td><td>47.320</td><td>62.420</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">S3: S2 w/ Direct &Delta;z Loss</td><td>0.606</td><td><span class="metric-second">0.697</span></td><td><span class="metric-second">0.768</span></td><td>0.880</td><td><span class="metric-second">2.032</span></td><td>0.310</td><td>20.849</td><td>0.995</td><td>47.432</td><td>62.440</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">S4: S1 w/ PAN</td><td>0.017</td><td>0.204</td><td>0.286</td><td>0.653</td><td>1.437</td><td><span class="metric-second">0.314</span></td><td><span class="metric-second">20.970</span></td><td><span class="metric-second">0.996</span></td><td><span class="metric-second">47.601</span></td><td><span class="metric-second">62.715</span></td>
+                                </tr>
+                                <tr class="ours-row">
+                                    <td class="method-cell"><strong>S5: S1 w/ LFIE+PAN (Ours)</strong></td><td><span class="metric-best">0.625</span></td><td><span class="metric-best">0.717</span></td><td><span class="metric-best">0.787</span></td><td><span class="metric-best">0.908</span></td><td><span class="metric-best">2.063</span></td><td>0.309</td><td>20.857</td><td>0.995</td><td>47.503</td><td>62.406</td>
+                                </tr>
+
+                                <tr class="group-start">
+                                    <th rowspan="4" scope="rowgroup" class="evaluation-cell">Ablation Study<br>Stage 2</th>
+                                    <td class="method-cell">R1: R4 w/o. OOD Data</td><td><span class="metric-second">0.622</span></td><td>0.686</td><td>0.773</td><td>0.751</td><td>0.892</td><td><span class="metric-second">0.310</span></td><td><span class="metric-second">20.945</span></td><td><span class="metric-best">0.997</span></td><td>48.203</td><td>61.045</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">R2: R4 w/o. Attribution Align</td><td>0.592</td><td>0.695</td><td>0.754</td><td>0.832</td><td>1.540</td><td><span class="metric-second">0.310</span></td><td>20.937</td><td><span class="metric-second">0.996</span></td><td><span class="metric-second">48.246</span></td><td>63.248</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">R3: R4 w/o. Dynamic Gate</td><td>0.621</td><td><span class="metric-second">0.717</span></td><td><span class="metric-second">0.779</span></td><td><span class="metric-second">0.933</span></td><td><span class="metric-second">2.205</span></td><td>0.308</td><td>20.804</td><td>0.995</td><td>47.514</td><td><span class="metric-second">63.265</span></td>
+                                </tr>
+                                <tr class="ours-row">
+                                    <td class="method-cell"><strong>R4: PARL (Ours)</strong></td><td><span class="metric-best">0.782</span></td><td><span class="metric-best">0.835</span></td><td><span class="metric-best">0.863</span></td><td><span class="metric-best">0.952</span></td><td><span class="metric-best">2.488</span></td><td><span class="metric-best">0.315</span></td><td><span class="metric-best">21.065</span></td><td><span class="metric-second">0.996</span></td><td><span class="metric-best">49.048</span></td><td><span class="metric-best">64.352</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="policy-results" class="benchmark-block">
+                    <h4 class="tbl-title">GT80 In-Distribution Benchmark</h4>
+                    <p class="benchmark-caption">Comparison and ablation results for force alignment and GT-based physics alignment.</p>
+                    <div class="metric-legend" aria-label="Result highlighting legend">
+                        <span><span class="metric-best">Best</span> result</span>
+                        <span><span class="metric-second">Second-best</span> result</span>
+                    </div>
+                    <div class="metric-table-wrap" tabindex="0" aria-label="Scrollable GT80 quantitative results table">
+                        <table class="metric-table">
+                            <colgroup>
+                                <col class="evaluation-col">
+                                <col class="method-col">
+                                <col span="9">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" scope="col">Evaluation</th>
+                                    <th rowspan="2" scope="col" class="method-cell">Method</th>
+                                    <th colspan="5" scope="colgroup">Force Alignment</th>
+                                    <th colspan="4" scope="colgroup">GT-based Physics Alignment</th>
+                                </tr>
+                                <tr>
+                                    <th scope="col">DCS &uarr;</th><th scope="col">DA@30&deg; &uarr;</th><th scope="col">DA@45&deg; &uarr;</th><th scope="col">MRR &uarr;</th><th scope="col">RMM &uarr;</th>
+                                    <th scope="col">Spatial IoU &uarr;</th><th scope="col">ST-IoU &uarr;</th><th scope="col">Weighted IoU &uarr;</th><th scope="col">MSE &darr;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th rowspan="4" scope="rowgroup" class="evaluation-cell">Qualitative<br>Evaluation</th>
+                                    <td class="method-cell">Wan-Move</td><td><span class="metric-second">0.464</span></td><td>0.488</td><td>0.550</td><td>0.450</td><td>0.392</td><td>0.373</td><td>0.120</td><td>0.252</td><td>0.005</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">Force Prompting</td><td>0.433</td><td><span class="metric-second">0.563</span></td><td><span class="metric-second">0.600</span></td><td>0.663</td><td>0.856</td><td><span class="metric-second">0.657</span></td><td><span class="metric-second">0.255</span></td><td><span class="metric-second">0.522</span></td><td><span class="metric-second">0.004</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">GoalForce</td><td>0.433</td><td>0.550</td><td>0.575</td><td><span class="metric-second">0.725</span></td><td><span class="metric-second">0.873</span></td><td>0.525</td><td>0.186</td><td>0.404</td><td>0.006</td>
+                                </tr>
+                                <tr class="ours-row">
+                                    <td class="method-cell"><strong>PhysForce (Ours)</strong></td><td><span class="metric-best">0.697</span></td><td><span class="metric-best">0.700</span></td><td><span class="metric-best">0.775</span></td><td><span class="metric-best">0.763</span></td><td><span class="metric-best">1.447</span></td><td><span class="metric-best">0.727</span></td><td><span class="metric-best">0.332</span></td><td><span class="metric-best">0.614</span></td><td><span class="metric-best">0.003</span></td>
+                                </tr>
+
+                                <tr class="group-start">
+                                    <th rowspan="5" scope="rowgroup" class="evaluation-cell">Ablation Study<br>Stage 1</th>
+                                    <td class="method-cell">S1: Wan2.2-5B Base</td><td>0.112</td><td>0.138</td><td>0.238</td><td>0.613</td><td>1.148</td><td>0.367</td><td>0.197</td><td>0.293</td><td>0.007</td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">S2: S1 w/ LFIE</td><td><span class="metric-second">0.509</span></td><td><span class="metric-second">0.575</span></td><td><span class="metric-second">0.663</span></td><td><span class="metric-second">0.755</span></td><td><span class="metric-second">1.206</span></td><td>0.610</td><td><span class="metric-second">0.250</span></td><td>0.495</td><td><span class="metric-second">0.005</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">S3: S2 w/ Direct &Delta;z Loss</td><td><span class="metric-second">0.509</span></td><td>0.550</td><td><span class="metric-second">0.663</span></td><td>0.743</td><td>1.144</td><td><span class="metric-second">0.616</span></td><td><span class="metric-second">0.250</span></td><td><span class="metric-second">0.499</span></td><td><span class="metric-second">0.005</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">S4: S1 w/ PAN</td><td>0.118</td><td>0.263</td><td>0.325</td><td>0.663</td><td>0.712</td><td>0.367</td><td>0.125</td><td>0.260</td><td>0.007</td>
+                                </tr>
+                                <tr class="ours-row">
+                                    <td class="method-cell"><strong>S5: S1 w/ LFIE+PAN (Ours)</strong></td><td><span class="metric-best">0.652</span></td><td><span class="metric-best">0.638</span></td><td><span class="metric-best">0.738</span></td><td><span class="metric-best">0.758</span></td><td><span class="metric-best">1.308</span></td><td><span class="metric-best">0.654</span></td><td><span class="metric-best">0.275</span></td><td><span class="metric-best">0.538</span></td><td><span class="metric-best">0.004</span></td>
+                                </tr>
+
+                                <tr class="group-start">
+                                    <th rowspan="4" scope="rowgroup" class="evaluation-cell">Ablation Study<br>Stage 2</th>
+                                    <td class="method-cell">R1: R4 w/o. OOD Data</td><td>0.409</td><td>0.550</td><td>0.638</td><td>0.438</td><td>0.467</td><td>0.488</td><td>0.161</td><td>0.365</td><td><span class="metric-second">0.004</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">R2: R4 w/o. Attribution Align</td><td>0.417</td><td>0.575</td><td>0.613</td><td>0.688</td><td>1.245</td><td><span class="metric-second">0.650</span></td><td><span class="metric-second">0.283</span></td><td><span class="metric-second">0.545</span></td><td><span class="metric-second">0.004</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="method-cell">R3: R4 w/o. Dynamic Gate</td><td><span class="metric-second">0.536</span></td><td><span class="metric-second">0.600</span></td><td><span class="metric-second">0.650</span></td><td><span class="metric-second">0.750</span></td><td><span class="metric-second">1.360</span></td><td>0.634</td><td>0.273</td><td>0.519</td><td>0.005</td>
+                                </tr>
+                                <tr class="ours-row">
+                                    <td class="method-cell"><strong>R4: PARL (Ours)</strong></td><td><span class="metric-best">0.697</span></td><td><span class="metric-best">0.700</span></td><td><span class="metric-best">0.775</span></td><td><span class="metric-best">0.763</span></td><td><span class="metric-best">1.447</span></td><td><span class="metric-best">0.727</span></td><td><span class="metric-best">0.332</span></td><td><span class="metric-best">0.614</span></td><td><span class="metric-best">0.003</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!--  More Ablation Cases: force-direction sweep                -->
+        <!-- ========================================================== -->
+        <section id="more-ablation" class="ablation-band">
+            <h3 class="section-head">More Ablation Cases</h3>
+            <p class="section-sub">Controlled sweeps show how PhysForce responds to changes in force direction and magnitude while the remaining conditions stay fixed.</p>
+
+            <div class="force-direction-shell">
+                <div class="force-direction-heading">
+                    <h4>Force Direction Sweep</h4>
+                    <span>Eight directions around the original, unannotated state</span>
+                </div>
+                <div class="force-direction-stage">
+                    <div id="force-direction-grid" class="force-direction-grid">
+                        <div class="force-direction-card">
+                            <span class="direction-angle">135&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 135 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/135.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <span class="direction-angle">90&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 90 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/90.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <span class="direction-angle">45&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 45 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/45.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="force-direction-card">
+                            <span class="direction-angle">180&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 180 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/180.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card condition">
+                            <span class="condition-label">Original State</span>
+                            <img src="./compared_videos_PhysForce/ablation_forcedirection/condition.png"
+                                alt="Original unannotated state for the force-direction ablation">
+                        </div>
+                        <div class="force-direction-card">
+                            <span class="direction-angle">0&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 0 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/0.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="force-direction-card">
+                            <span class="direction-angle">225&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 225 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/225.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <span class="direction-angle">270&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 270 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/270.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <span class="direction-angle">315&deg;</span>
+                            <video muted playsinline preload="metadata" aria-label="Force direction 315 degrees">
+                                <source src="./compared_videos_PhysForce/ablation_forcedirection/315.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="force-direction-shell force-magnitude-shell">
+                <div class="force-direction-heading">
+                    <h4>Force Magnitude Sweep</h4>
+                    <span>Same scene and direction, with progressively stronger force</span>
+                </div>
+                <div class="force-magnitude-scale" aria-label="Force magnitude increases from left to right">
+                    <span>Smaller Force</span>
+                    <div class="magnitude-arrow" aria-hidden="true"></div>
+                    <span>Larger Force</span>
+                </div>
+                <div class="force-magnitude-stage">
+                    <div id="force-magnitude-grid" class="force-magnitude-grid">
+                        <div class="force-direction-card">
+                            <video muted playsinline preload="metadata" aria-label="Smallest force response">
+                                <source src="./compared_videos_PhysForce/ablation_forcemagnitude/0p1.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <video muted playsinline preload="metadata" aria-label="Small force response">
+                                <source src="./compared_videos_PhysForce/ablation_forcemagnitude/0p2.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <video muted playsinline preload="metadata" aria-label="Medium force response">
+                                <source src="./compared_videos_PhysForce/ablation_forcemagnitude/0p5.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <video muted playsinline preload="metadata" aria-label="Large force response">
+                                <source src="./compared_videos_PhysForce/ablation_forcemagnitude/0p7.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="force-direction-card">
+                            <video muted playsinline preload="metadata" aria-label="Largest force response">
+                                <source src="./compared_videos_PhysForce/ablation_forcemagnitude/1p0.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            (function () {
+                const videos = document.querySelectorAll("#more-ablation video");
+                const playback = new Map();
+                videos.forEach(video => playback.set(video, createFirstFrameLoop(video)));
+                if ("IntersectionObserver" in window) {
+                    const observer = new IntersectionObserver(entries => {
+                        entries.forEach(entry => {
+                            playback.get(entry.target).setActive(entry.isIntersecting);
+                        });
+                    }, { threshold: 0.2 });
+                    videos.forEach(video => observer.observe(video));
+                } else {
+                    videos.forEach(video => playback.get(video).setActive(true));
+                }
+            })();
+        </script>
+
+        <!-- ===== Ethics ===== -->
+        <section class="ethics-section">
+            <h3>Ethics Concerns</h3>
+            <p>
+                All videos featured in these demos are either generated by models or sourced from publicly available
+                datasets, and are intended solely for the purpose of demonstrating the technical capabilities of our
+                research. If you believe any content infringes upon rights or raises ethical concerns, please contact us
+                and we will address the issue and remove the material promptly.
+            </p>
+        </section>
+
+    </div>
+
+</body>
+
+</html>
